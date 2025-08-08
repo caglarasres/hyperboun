@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Motor Kontrol Paneli</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            padding: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px 40px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .temp {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .motor-status {
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .speed-display {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: #764ba2;
+            outline: none;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(118,75,162,0.6);
+            transition: background 0.3s ease;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: background 0.3s ease;
+        }
+        input[type=range]:hover::-webkit-slider-thumb {
+            background: #e0e0e0;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: background 0.3s ease;
+        }
+        .stop-btn {
+            background: #e53e3e;
+            width: 100%;
+            padding: 10px 0;
+            font-size: 1.2em;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(229,62,62,0.7);
+            border: none;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
+        .stop-btn:hover {
+            background: #b22a2a;
+        }
+        .warning {
+            color: #ff5555;
+            font-weight: bold;
+            margin-top: 10px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <header>Motor Kontrol Paneli</header>
+    <div class="container">
+        <div class="temp">Sıcaklık: <span id="temperature">-- °C</span></div>
+        <div class="motor-status">Motor Durumu: <span id="motorStatus">Kapalı</span></div>
+        <div class="speed-display">Hız: <span id="speedValue">0</span></div>
+
+        <input type="range" id="speedSlider" min="1300" max="1800" step="10" value="1550" />
+
+        <button class="stop-btn" id="stopBtn">Durdur</button>
+
+        <div class="warning" id="warningMsg"></div>
+    </div>
+
+    <script>
+        const MIN_SPEED = 1300;
+        const MAX_SPEED = 1800;
+        let currentSpeed = 1550;
+
+        const temperatureEl = document.getElementById('temperature');
+        const motorStatusEl = document.getElementById('motorStatus');
+        const speedValueEl = document.getElementById('speedValue');
+        const warningMsgEl = document.getElementById('warningMsg');
+        const speedSlider = document.getElementById('speedSlider');
+        const stopBtn = document.getElementById('stopBtn');
+
+        function updateUI(data) {
+            temperatureEl.textContent = data.temperature.toFixed(1) + ' °C';
+            motorStatusEl.textContent = data.motor_status === 'ON' ? 'Açık' : 'Kapalı';
+            speedValueEl.textContent = data.motor_status === 'ON' ? currentSpeed : 0;
+
+            if (data.overheat) {
+                warningMsgEl.textContent = '⚠️ Sıcaklık çok yüksek! Motor durduruldu.';
+                speedSlider.disabled = true;
+                stopBtn.disabled = true;
+            } else {
+                warningMsgEl.textContent = '';
+                speedSlider.disabled = false;
+                stopBtn.disabled = false;
+            }
+        }
+
+        async function fetchTemperature() {
+            try {
+                const res = await fetch('/temperature');
+                const data = await res.json();
+                updateUI(data);
+            } catch (e) {
+                console.error('Sıcaklık verisi alınamadı.', e);
+            }
+        }
+
+        async function setSpeed(speed) {
+            try {
+                const res = await fetch('/set_speed', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({speed})
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    currentSpeed = speed;
+                    speedSlider.value = speed;
+                } else {
+                    alert(data.message);
+                }
+                fetchTemperature();
+            } catch (e) {
+                console.error('Hız ayarlanamadı.', e);
+            }
+        }
+
+        async function stopMotor() {
+            try {
+                const res = await fetch('/stop', {method: 'POST'});
+                const data = await res.json();
+                if (data.status === 'stopped') {
+                    currentSpeed = 0;
+                    speedSlider.value = MIN_SPEED;
+                }
+                fetchTemperature();
+            } catch (e) {
+                console.error('Motor durdurulamadı.', e);
+            }
+        }
+
+        speedSlider.addEventListener('input', () => {
+            const speed = parseInt(speedSlider.value);
+            setSpeed(speed);
+        });
+
+        stopBtn.addEventListener('click', stopMotor);
+
+        window.addEventListener('load', () => {
+            setSpeed(currentSpeed);
+            fetchTemperature();
+        });
+
+        setInterval(fetchTemperature, 4000);
+    </script>
+</body>
+</html>
