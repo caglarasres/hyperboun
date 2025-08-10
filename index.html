@@ -1,205 +1,245 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Motor Kontrol Paneli</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-        header {
-            padding: 20px;
-            font-size: 2em;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-        .container {
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 30px 40px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-        .temp {
-            font-size: 1.8em;
-            margin-bottom: 20px;
-        }
-        .motor-status {
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        .speed-display {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 12px;
-            border-radius: 6px;
-            background: #764ba2;
-            outline: none;
-            margin-bottom: 20px;
-            cursor: pointer;
-            box-shadow: 0 5px 10px rgba(118,75,162,0.6);
-            transition: background 0.3s ease;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: background 0.3s ease;
-        }
-        input[type=range]:hover::-webkit-slider-thumb {
-            background: #e0e0e0;
-        }
-        input[type=range]::-moz-range-thumb {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: background 0.3s ease;
-        }
-        .stop-btn {
-            background: #e53e3e;
-            width: 100%;
-            padding: 10px 0;
-            font-size: 1.2em;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(229,62,62,0.7);
-            border: none;
-            color: white;
-            cursor: pointer;
-            user-select: none;
-        }
-        .stop-btn:hover {
-            background: #b22a2a;
-        }
-        .warning {
-            color: #ff5555;
-            font-weight: bold;
-            margin-top: 10px;
-            height: 24px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hyperloop Control Panel</title>
+  <style>
+    :root{
+      --bg:#0b0f16;          /* ana arka plan */
+      --panel:#0f1524;       /* panel arka planı */
+      --card:rgba(255,255,255,.06);
+      --card-hover:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.10);
+      --text:#e7ecf4;
+      --muted:#9aa3b2;
+      --accent1:#7dd3fc;     /* cyan */
+      --accent2:#a78bfa;     /* purple */
+      --ok:#3ddc97;
+      --warn:#ff6b6b;
+      --shadow:0 10px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; padding:0; color:var(--text); background:
+        radial-gradient(80vw 80vh at 10% -10%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(70vw 60vh at 120% 10%, rgba(34,211,238,.12), transparent 60%),
+        var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      letter-spacing:.2px;
+    }
+
+    /* Üst bar */
+    .appbar{
+      position: sticky; top:0; z-index: 10;
+      background: linear-gradient(90deg, rgba(125,211,252,.12), rgba(167,139,250,.12));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom:1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .container-xl{max-width:1200px; margin:0 auto; padding:14px 18px; display:flex; align-items:center; gap:14px}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:600}
+    .brand .dot{width:10px; height:10px; border-radius:999px; background:linear-gradient(135deg, var(--accent1), var(--accent2)); box-shadow:0 0 16px rgba(125,211,252,.65)}
+    .brand span{opacity:.9}
+
+    .grid{max-width:1200px; margin:26px auto; padding:0 16px; display:grid; gap:20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px 16px 14px;
+      transition:.25s ease;
+    }
+    .card:hover{ background: var(--card-hover); transform: translateY(-2px); }
+
+    .title{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding-bottom:10px; margin-bottom:12px;
+      border-bottom:1px dashed var(--border);
+      font-weight:650; letter-spacing:.3px;
+    }
+    .title .accent{font-size:.9rem; color:var(--muted)}
+
+    .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+
+    table{width:100%; border-collapse:collapse}
+    td{padding:8px 4px; border-bottom:1px dashed rgba(255,255,255,.06); font-size:.95rem}
+    td:first-child{color:var(--muted)}
+
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+
+    .pill{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:rgba(255,255,255,.04); font-size:.85rem}
+    .pill.ok{ color: var(--ok); border-color: rgba(61,220,151,.35); box-shadow: 0 0 0 2px rgba(61,220,151,.08) }
+    .pill.warn{ color: var(--warn); border-color: rgba(255,107,107,.35); box-shadow: 0 0 0 2px rgba(255,107,107,.08) }
+    .pill.idle{ color:#d1d6e0 }
+
+    /* Butonlar */
+    .actions{display:flex; flex-wrap:wrap; gap:10px}
+    .btn{appearance:none; border:none; cursor:pointer; padding:10px 14px; border-radius:12px; font-weight:600; color:#0b0f16; background:linear-gradient(135deg, var(--accent1), var(--accent2)); box-shadow:0 10px 25px rgba(125,211,252,.25); transition: transform .08s ease, box-shadow .2s ease}
+    .btn:hover{ transform: translateY(-1px); box-shadow:0 12px 30px rgba(167,139,250,.28) }
+    .btn:active{ transform: translateY(0) scale(.99) }
+
+    .btn-secondary{ background:transparent; color:var(--text); border:1px solid var(--border); box-shadow:none }
+    .btn-secondary:hover{ background: rgba(255,255,255,.06) }
+
+    /* Slider */
+    .slider-wrap{margin-top:8px}
+    input[type=range]{ -webkit-appearance:none; width:100%; height:32px; background:transparent }
+    input[type=range]::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background: linear-gradient(90deg, rgba(125,211,252,.45), rgba(167,139,250,.45)); border:1px solid rgba(255,255,255,.15) }
+    input[type=range]::-moz-range-track{ height:6px; border-radius:999px; background: linear-gradient(90deg, rgba(125,211,252,.45), rgba(167,139,250,.45)); border:1px solid rgba(255,255,255,.15) }
+    input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; margin-top:-8px; width:22px; height:22px; border-radius:50%; background:#fff; border:2px solid transparent; background-image: linear-gradient(#fff,#fff), linear-gradient(135deg, var(--accent1), var(--accent2)); background-origin: border-box; background-clip: content-box, border-box; box-shadow: 0 2px 10px rgba(0,0,0,.35) }
+    input[type=range]::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:#fff; border:0; box-shadow: 0 2px 10px rgba(0,0,0,.35) }
+
+    /* Mesaj */
+    #msg{ margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background: rgba(255,255,255,.04); color:var(--muted) }
+
+    /* Alt bilgi */
+    .footer{max-width:1200px; margin:0 auto 28px; padding:0 16px; color:var(--muted); opacity:.85; font-size:.9rem}
+
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f6f7fb; --panel:#ffffff; --text:#111827; --muted:#6b7280; --border:rgba(17,24,39,.08)}
+      .card{ background:#fff }
+      body{ background:#f6f7fb }
+      .btn{ color:white }
+    }
+  </style>
 </head>
 <body>
-    <header>Motor Kontrol Paneli</header>
-    <div class="container">
-        <div class="temp">Sıcaklık: <span id="temperature">-- °C</span></div>
-        <div class="motor-status">Motor Durumu: <span id="motorStatus">Kapalı</span></div>
-        <div class="speed-display">Hız: <span id="speedValue">0</span></div>
-
-        <input type="range" id="speedSlider" min="1300" max="1800" step="10" value="1550" />
-
-        <button class="stop-btn" id="stopBtn">Durdur</button>
-
-        <div class="warning" id="warningMsg"></div>
+  <header class="appbar">
+    <div class="container-xl">
+      <div class="brand"><span class="dot"></span><span>🚄 Hyperloop Control Panel</span></div>
+      <div style="margin-left:auto" class="row mono">
+        <span class="pill idle">Durum: <span id="motorStatus">—</span></span>
+      </div>
     </div>
+  </header>
 
-    <script>
-        const MIN_SPEED = 1300;
-        const MAX_SPEED = 1800;
-        let currentSpeed = 1550;
+  <main class="grid">
+    <!-- Motor Kontrol -->
+    <section class="card">
+      <div class="title">Motor Kontrol <span class="accent mono">µs: <span id="speedVal">1500</span></span></div>
+      <div class="slider-wrap">
+        <input id="speed" type="range" min="1380" max="1800" value="1500" />
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button id="btnSet" class="btn">⚡ Hızı Uygula</button>
+        <button id="btnStop" class="btn btn-secondary">⏹ Durdur</button>
+      </div>
+      <div id="msg" class="mono" aria-live="polite">Hazır.</div>
+    </section>
 
-        const temperatureEl = document.getElementById('temperature');
-        const motorStatusEl = document.getElementById('motorStatus');
-        const speedValueEl = document.getElementById('speedValue');
-        const warningMsgEl = document.getElementById('warningMsg');
-        const speedSlider = document.getElementById('speedSlider');
-        const stopBtn = document.getElementById('stopBtn');
+    <!-- Sıcaklık -->
+    <section class="card">
+      <div class="title">Sıcaklık & Durum</div>
+      <table>
+        <tr><td>Anlık Sıcaklık</td><td class="mono"><span id="temp">—</span> °C</td></tr>
+        <tr><td>Aşırı Isınma</td><td id="overheat">—</td></tr>
+        <tr><td>Son Güncelleme</td><td class="mono" id="tms">—</td></tr>
+      </table>
+    </section>
 
-        function updateUI(data) {
-            temperatureEl.textContent = data.temperature.toFixed(1) + ' °C';
-            motorStatusEl.textContent = data.motor_status === 'ON' ? 'Açık' : 'Kapalı';
-            speedValueEl.textContent = data.motor_status === 'ON' ? currentSpeed : 0;
+    <!-- IMU -->
+    <section class="card">
+      <div class="title">IMU (MPU6050)</div>
+      <table>
+        <tr><td>Accel g (x,y,z)</td><td class="mono" id="accel">—</td></tr>
+        <tr><td>Gyro dps (x,y,z)</td><td class="mono" id="gyro">—</td></tr>
+        <tr><td>IMU Temp</td><td class="mono"><span id="imut">—</span> °C</td></tr>
+      </table>
+    </section>
 
-            if (data.overheat) {
-                warningMsgEl.textContent = '⚠️ Sıcaklık çok yüksek! Motor durduruldu.';
-                speedSlider.disabled = true;
-                stopBtn.disabled = true;
-            } else {
-                warningMsgEl.textContent = '';
-                speedSlider.disabled = false;
-                stopBtn.disabled = false;
-            }
-        }
+    <!-- MAX6675 & ACS724 -->
+    <section class="card">
+      <div class="title">MAX6675 & ACS724</div>
+      <table>
+        <tr><td>MAX6675</td><td class="mono"><span id="maxc">—</span> °C</td></tr>
+        <tr><td>Akım (I)</td><td class="mono"><span id="amps">—</span> A</td></tr>
+        <tr><td>Vout / Vzero</td><td class="mono"><span id="vout">—</span> V / <span id="vzero">—</span> V</td></tr>
+      </table>
+    </section>
+  </main>
 
-        async function fetchTemperature() {
-            try {
-                const res = await fetch('/temperature');
-                const data = await res.json();
-                updateUI(data);
-            } catch (e) {
-                console.error('Sıcaklık verisi alınamadı.', e);
-            }
-        }
+  <div class="footer mono">Endpoint'ler aynı: <code>/set_speed</code>, <code>/stop</code>, <code>/temperature</code>, <code>/sensors</code>. Arayüz sadece görsel olarak güncellendi.</div>
 
-        async function setSpeed(speed) {
-            try {
-                const res = await fetch('/set_speed', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({speed})
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    currentSpeed = speed;
-                    speedSlider.value = speed;
-                } else {
-                    alert(data.message);
-                }
-                fetchTemperature();
-            } catch (e) {
-                console.error('Hız ayarlanamadı.', e);
-            }
-        }
+  <script>
+    const $ = id => document.getElementById(id);
 
-        async function stopMotor() {
-            try {
-                const res = await fetch('/stop', {method: 'POST'});
-                const data = await res.json();
-                if (data.status === 'stopped') {
-                    currentSpeed = 0;
-                    speedSlider.value = MIN_SPEED;
-                }
-                fetchTemperature();
-            } catch (e) {
-                console.error('Motor durdurulamadı.', e);
-            }
-        }
+    const msg = (text, type = 'info') => {
+      const el = $('msg');
+      el.textContent = text;
+      if(type==='error'){ el.style.borderColor='rgba(255,107,107,.35)'; el.style.color='#ffb3b3'; }
+      else if(type==='ok'){ el.style.borderColor='rgba(61,220,151,.35)'; el.style.color='#b9f7dd'; }
+      else { el.style.borderColor='var(--border)'; el.style.color='var(--muted)'; }
+    }
 
-        speedSlider.addEventListener('input', () => {
-            const speed = parseInt(speedSlider.value);
-            setSpeed(speed);
+    $('speed').addEventListener('input', e => $('speedVal').textContent = e.target.value);
+
+    $('btnSet').addEventListener('click', async () => {
+      const speed = parseInt($('speed').value, 10);
+      try {
+        const r = await fetch('/set_speed', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ speed })
         });
+        const j = await r.json();
+        msg(j.message || ('Uygulandı: ' + speed), j.status === 'error' ? 'error' : 'ok');
+      } catch (e) {
+        msg('Hata: ' + e, 'error');
+      }
+    });
 
-        stopBtn.addEventListener('click', stopMotor);
+    $('btnStop').addEventListener('click', async () => {
+      try {
+        const r = await fetch('/stop', { method: 'POST' });
+        await r.json();
+        msg('Motor durdu', 'info');
+      } catch(e){
+        msg('Hata: ' + e, 'error');
+      }
+    });
 
-        window.addEventListener('load', () => {
-            setSpeed(currentSpeed);
-            fetchTemperature();
-        });
+    function setPill(el, state){
+      el.classList.remove('ok','warn','idle');
+      el.classList.add(state);
+    }
 
-        setInterval(fetchTemperature, 4000);
-    </script>
+    async function poll(){
+      try {
+        const t = await fetch('/temperature').then(r => r.json());
+        $('temp').textContent = (t.temperature ?? 0).toFixed(2);
+        $('overheat').textContent = t.overheat ? 'EVET' : 'hayır';
+        $('overheat').className = 'pill ' + (t.overheat ? 'warn' : 'ok');
+
+        const statusEl = $('motorStatus').parentElement; // pill container
+        $('motorStatus').textContent = t.motor_status ?? '—';
+        setPill(statusEl, (t.motor_status||'').toLowerCase().includes('run') ? 'ok' : 'idle');
+
+        const s = await fetch('/sensors').then(r => r.json());
+        $('tms').textContent = s.t_ms ?? '—';
+
+        const d = s.data || {};
+        const mpu = d.mpu6050 || {};
+        const accel = (mpu.accel_g || {});
+        const gyro = (mpu.gyro_dps || {});
+        $('accel').textContent = `(${(accel.x ?? 0).toFixed(4)}, ${(accel.y ?? 0).toFixed(4)}, ${(accel.z ?? 0).toFixed(4)})`;
+        $('gyro').textContent  = `(${(gyro.x ?? 0).toFixed(4)}, ${(gyro.y ?? 0).toFixed(4)}, ${(gyro.z ?? 0).toFixed(4)})`;
+        $('imut').textContent  = (mpu.temp_c ?? 0).toFixed(2);
+        $('maxc').textContent  = (d.max6675_c ?? 0).toFixed(2);
+        const acs = d.acs724 || {};
+        $('amps').textContent  = (acs.amps ?? 0).toFixed(4);
+        $('vout').textContent  = (acs.vout ?? 0).toFixed(4);
+        $('vzero').textContent = (acs.vzero ?? 0).toFixed(4);
+      } catch (e) { /* sessizce tekrar dene */ }
+      finally { setTimeout(poll, 600); }
+    }
+    poll();
+  </script>
 </body>
 </html>
